@@ -2,8 +2,14 @@
 import sys
 
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+
+try:
+    from django.contrib.auth import get_user_model
+except ImportError: # django < 1.5
+    from django.contrib.auth.models import User
+else:
+    User = get_user_model()
 
 from cms.models.managers import PageModeratorStateManager
 from cms.models.pagemodel import Page
