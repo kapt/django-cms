@@ -2,6 +2,7 @@
 from cms.exceptions import DuplicatePlaceholderWarning
 from cms.models import Page
 from cms.templatetags.cms_tags import Placeholder
+from cms.utils import get_cms_setting
 from cms.utils.placeholder import validate_placeholder_name
 from django.contrib.sites.models import Site, SITE_CACHE
 from django.shortcuts import get_object_or_404
@@ -119,6 +120,29 @@ def _scan_placeholders(nodelist, current_block=None, ignore_blocks=None):
                     placeholders += _scan_placeholders(obj, current_block, ignore_blocks)
     return placeholders
 
+def _order_placeholders(placeholders):
+    """
+    Order a list of placeholder according to their configuration in CMS_PLACEHOLDER_CONF. This ordering is
+    based on a 'weight' attribute.
+    """
+    # Get the required settings
+    conf = get_cms_setting('PLACEHOLDER_CONF')
+    
+    # Try to determine which placeholder can be sorted and which can not
+    sortable_placeholders = []
+    unsortable_placeholders = []
+    for placeholder in placeholders:
+        if placeholder in conf.keys() and 'weight' in conf[placeholder]:
+            sortable_placeholders.append(placeholder)
+        else:
+            unsortable_placeholders.append(placeholder)
+            
+    # Sort!
+    sorted_placeholders = sorted(sortable_placeholders, key=lambda item: conf[item]['weight'])
+    sorted_placeholders += unsortable_placeholders
+
+    return sorted_placeholders
+
 def get_placeholders(template):
     compiled_template = get_template(template)
     placeholders = _scan_placeholders(compiled_template.nodelist)
@@ -129,6 +153,7 @@ def get_placeholders(template):
         else:
             validate_placeholder_name(placeholder)
             clean_placeholders.append(placeholder)
+    clean_placeholders = _order_placeholders(clean_placeholders)
     return clean_placeholders
 
 SITE_VAR = "site__exact"
