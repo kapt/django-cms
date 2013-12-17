@@ -32,22 +32,22 @@ class PlaceholderField(models.ForeignKey):
         widget.choices = []
         return PlaceholderFormField(required=False, widget=widget, **defaults)
 
-    def _get_new_placeholder(self):
-        return Placeholder.objects.create(slot=self.slotname,
+    def _get_new_placeholder(self, using='default'):
+        return Placeholder.objects.using(using).create(slot=self.slotname,
             default_width=self.default_width)
 
     def pre_save(self, model_instance, add):
         if not model_instance.pk:
-            setattr(model_instance, self.name, self._get_new_placeholder())
+            setattr(model_instance, self.name, self._get_new_placeholder(using=model_instance._state.db))
         return super(PlaceholderField, self).pre_save(model_instance, add)
 
     def save_form_data(self, instance, data):
         if not instance.pk:
-            data = self._get_new_placeholder()
+            data = self._get_new_placeholder(using=instance._state.db)
         else:
             data = getattr(instance, self.name)
             if not isinstance(data, Placeholder):
-                data = self._get_new_placeholder()
+                data = self._get_new_placeholder(using=instance._state.db)
         super(PlaceholderField, self).save_form_data(instance, data)
 
     def south_field_triple(self):
