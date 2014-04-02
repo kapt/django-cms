@@ -224,7 +224,7 @@ class BasicPagePermissionManager(models.Manager):
         """Get all objects for given user, also takes look if user is in some
         group.
         """
-        return self.filter(Q(user=user) | Q(group__user=user))
+        return self.filter(Q(user=user) | Q(group__contactuser=user))
 
     def with_can_change_permissions(self, user):
         """Set of objects on which user haves can_change_permissions. !But only
