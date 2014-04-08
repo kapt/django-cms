@@ -73,7 +73,7 @@ def get_visible_pages(request, pages, site=None):
     # authenticated user and global permission
     if is_auth_user:
         global_page_perm_q = Q(
-            Q(user=request.user) | Q(group__user=request.user)
+            Q(user=request.user) | Q(group__contactuser=request.user)
         ) & Q(can_view=True) & Q(Q(sites__in=[site.pk]) | Q(sites__isnull=True))
         global_view_perms = GlobalPagePermission.objects.filter(global_page_perm_q).exists()
 
