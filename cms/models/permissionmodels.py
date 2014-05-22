@@ -4,14 +4,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from django.contrib.auth.models import Group
 
-try:
-    from django.contrib.auth import get_user_model
-except ImportError: # django < 1.5
-    from django.contrib.auth.models import User
-else:
-    User = get_user_model()
+from django.conf import settings
+User = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 from django.contrib.sites.models import Site
+from django.contrib.auth.models import AbstractBaseUser
 
 from cms.models import Page
 from cms.models.managers import BasicPagePermissionManager, PagePermissionManager
@@ -110,7 +107,7 @@ class PagePermission(AbstractPagePermission):
         return "%s :: %s has: %s" % (page, self.audience, unicode(dict(ACCESS_CHOICES)[self.grant_on]))
 
 
-class PageUser(User):
+class PageUser(AbstractBaseUser):
     """Cms specific user data, required for permission system
     """
     created_by = models.ForeignKey(User, related_name="created_users")
